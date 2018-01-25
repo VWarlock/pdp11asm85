@@ -98,6 +98,7 @@ std::wstring replaceExtension(const std::wstring& fileName, const char* ext) {
 #include <limits>
 #include <stdexcept>
 #include <unistd.h>
+#include <stdint.h>
 #include <string.h>
 
 void saveStringToFile(const char* fileName2, const void* buf, size_t len)
