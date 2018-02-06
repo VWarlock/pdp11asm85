@@ -1,0 +1,166 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+<div class="entry-content">Windows-версия и исходники: <a target="_self" href="http://github.com/vinxru/pdp11asm" rel="nofollow">http://github.com/vinxru/pdp11asm</a><br><br>Представляю
+ вам первую версию ассемблера для процессора КР1801ВМ1. Этот процессор 
+совместим с системой команд PDP11 и используется в компьютерах БК001x и 
+ДВК. Отдаю скомпилированным под Windows, с исходниками и его можно 
+скомпилировать под другие ОС. В комплекте игра. Лицензия GPL, но как это
+ оформить, я пока не понял. Эмулятор-отладчик можно скачать <a target="_self" href="http://bashkiria-2m.narod.ru/files/emu.rar" rel="nofollow">тут</a>.<br><br>Когда
+ то давно я уже писал этот ассемблер. В LJ можно найти про это заметку. 
+Но та версия была потеряна и я не мог опубликовать её исходники, так как
+ несколько файлов были использованы из закрытого проекта. Несколько дней
+ назад ко мне обратился Lasoft со словами: "Видел что ты написал 
+компилятор для Windows, респект! Можешь как-то помочь, может исходники? я
+ хочу попробовать его и если что доработать". И я решил переписать 
+ассемблер заново, да так, что бы он был кросс-платформенным. Наверное не
+ стоило работать бесплатно, ради одного человека, который и не обещал 
+пользоваться и вообще просил исходники. Ну да ладно. Всего два вечера 
+работы. И быть может эта программа пойдет в резюме.<br><a target="_self" name="cutid1"></a><br>Я
+ знаю, что для PDP-11 стандартом является ассемблер MACRO11. Я его не 
+видел и не трогал. И уверен, что мой ассемблер сильно не совместим с 
+ним. Многое пока не реализовано. Из арифметики поддерживается только 
+сложение и вычитание. Без скобок. Нет макросов, нет условной компиляции,
+ нет include.<br><br>Ассемблер формирует BIN файл, который умеет 
+запускать эмулятор B2M. Первые два слова - адрес загрузки, длина. Далее 
+идет двоичный код. А так же формирует LST файл, который эмулятор B2M 
+использует для отладки. В отладчике будут отображаться имена переменных и
+ комментарии, что очень сильно облегчает работу. Но! Почему то LST файл 
+используется только для самых первых строк программы, дальше эмулятор 
+всё забывает. Надо разбираться.<br><br>Если кому то потребуются новые 
+возможности, я безвозмездно доработаю ассемблер. А пока пусть будет так.
+ Ну действительно, зачем дорабатывать то, что никому не будет нужно.<br><br>Ниже следует краткое описание всех команд ассемблера:<br><br><h3>Команды программы</h3><br><table>
+<tbody><tr><td style="white-space:nowrap;border-bottom:1px solid black">ORG N<br>.LINK N</td><td style="border-bottom:1px solid black">Устанавливает адрес, куда будет выводится код после этой команды. По умолчанию используется адрес 0.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">DB<br>.BYTE</td><td style="border-bottom:1px solid black">Записать
+ байты. Через запятую можно указывать числа в формате: 10 - десятичный, 
+010 - восьмеричный, 0x10 - шестнадцатеричный, 10b - десятичный, 'A' - 
+код символа, "ABCD" - несколько кодов символов. Так же поддерживается 
+конструкция N DUP(C) записывающая N раз байт C.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">DW<br>.WORD</td><td style="border-bottom:1px solid black">Записать слова.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">.ASCII /text/</td><td style="border-bottom:1px solid black">Вывести текст.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">.END</td><td style="border-bottom:1px solid black">Игнорируется</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">.BLKB N</td><td style="border-bottom:1px solid black">Вывести N байт 0.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">.BLKW N</td><td style="border-bottom:1px solid black">Вывести N слов 0.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">name EQU value<br>name = value</td><td style="border-bottom:1px solid black">Установить константу. Во всем файле name будет автоматически заменяться на value.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">name:</td><td style="border-bottom:1px solid black">Метка. Во всем файле name будет заменяться на адрес метки.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">N:</td><td style="border-bottom:1px solid black">Числовая
+ метка. Область действия метки ограничивается символьными метками. Такая
+ метка может быть использована только в командах условного перехода B? и
+ SOB.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">MAKE_BK0010_ROM "filename", start, end</td><td style="border-bottom:1px solid black">Сформировать файл поддерживаемый эмулятором B2M. start, end - начальный и конечный адрес программы. Можно использовать метки.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">MAKE_BINARY_FILE "filename", start, end</td><td style="border-bottom:1px solid black">Выгрузить образ памяти в файл. start, end - начальный и конечный адрес. Можно использовать метки.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">INSERT_FILE "filename", offset, size</td><td style="border-bottom:1px solid black">Вставить двоичный файл. Можно вставить часть файла, задав размер и смещение в исходном файле.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">ALIGN N</td><td style="border-bottom:1px solid black">Выровнять адрес следующей команды на N-байт.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CONVERT1251TOKOI8R</td><td style="border-bottom:1px solid black">Включить преобразование строк из кодировки 1251 в KOI8R.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CONVERT1251TOKOI8R OFF</td><td style="border-bottom:1px solid black">Выключить преобразование строк из кодировки 1251 в KOI8R.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">DECIMALNUMBERS</td><td style="border-bottom:1px solid black">Далее все числа по умолчанию 10-ричные. В стандарте C.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">DECIMALNUMBERS OFF</td><td style="border-bottom:1px solid black">Далее все числа по умолчанию 8-ричные. В конце 10-чных чисел необходимо ставить точку.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">INSERT_BITMAP1 "name", width, height</td><td style="border-bottom:1px solid black">Вставить
+ изображение преобразовав его в формат видеопамяти БК0010 2 цвета. 
+Изображение должно быть в формате BMP 24 бита. width, height должны 
+соответствовать размеру изображения в файле.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">INSERT_BITMAP2 "name", width, height</td><td style="border-bottom:1px solid black">Вставить
+ изображение преобразовав его в формат видеопамяти БК0010 4 цвета. 
+Изображение должно быть в формате BMP 24 бита. width, height должны 
+соответствовать размеру изображения в файле.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">INSERT_BITMAP1T "name", width, height</td><td style="border-bottom:1px solid black">Вставить изображение преобразовав его в NAND и OR маски 2 цвета. В качестве прозрачного цвета используется #FF00FF.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">INSERT_BITMAP2T "name", width, height</td><td style="border-bottom:1px solid black">Вставить изображение преобразовав его в NAND и OR маски 4 цвета. В качестве прозрачного цвета используется #FF00FF.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">; text<br>// text</td><td style="border-bottom:1px solid black">Комментарий</td></tr>
+<tr><td>.</td><td>Адрес этой команды</td></tr>
+</tbody></table><br><h3>Команды процессора без аргументов</h3><br><table>
+<tbody><tr><td style="white-space:nowrap;border-bottom:1px solid black">HALT</td><td style="border-bottom:1px solid black">Останавливает ЦП</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">WAIT</td><td style="border-bottom:1px solid black">Останавливает ЦП до прерывания</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BPT</td><td style="border-bottom:1px solid black">Вызов прерывания</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">IOT</td><td style="border-bottom:1px solid black">Вызов прерывания</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">EMT 0..255</td><td style="border-bottom:1px solid black">Вызов прерывания</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">TRAP 0..255</td><td style="border-bottom:1px solid black">Вызов прерывания</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">MARK 0..63</td><td style="border-bottom:1px solid black">Вызов прерывания</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">RESET</td><td style="border-bottom:1px solid black">Перезагрузка процессора</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">RTI</td><td style="border-bottom:1px solid black">Выход из прерывания (Загружает PC, PS из стека)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">RTT</td><td style="border-bottom:1px solid black">Выход из прерывания пошаговой отладки.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">NOP</td><td style="border-bottom:1px solid black">Ничего не делает</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CLC</td><td style="border-bottom:1px solid black">Сбрасывает флаг C</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CLV</td><td style="border-bottom:1px solid black">Сбрасывает флаг V</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CLZ</td><td style="border-bottom:1px solid black">Сбрасывает флаг Z</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CLN</td><td style="border-bottom:1px solid black">Сбрасывает флаг N</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">СCC</td><td style="border-bottom:1px solid black">Сбрасывает все флаги</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">SEC</td><td style="border-bottom:1px solid black">Устанавливает флаг C</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">SEV</td><td style="border-bottom:1px solid black">Устанавливает флаг V</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">SEZ</td><td style="border-bottom:1px solid black">Устанавливает флаг Z</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">SEN</td><td style="border-bottom:1px solid black">Устанавливает флаг N</td></tr>
+<tr><td>SCC</td><td>Устанавливает все флаги</td></tr>
+<tr><td>RET</td><td>Синоним RTS PC</td></tr>
+</tbody></table><br><h3>Команды процессора с одним аргументом</h3><br><p>(B) описании значит, что существует две версии команды CLRB - обрабатывающей байты и CLR - обрабатывающей слова.</p><br><table>
+<tbody><tr><td style="white-space:nowrap;border-bottom:1px solid black">JMP r</td><td style="border-bottom:1px solid black">Переход по адресу</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">SWAB r</td><td style="border-bottom:1px solid black">Поменять старший и младший байты местами</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CLR(B) r</td><td style="border-bottom:1px solid black">Записать 0</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">COM(B) r</td><td style="border-bottom:1px solid black">Инверсия (заменть все биты на противоположные)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">INC(B) r</td><td style="border-bottom:1px solid black">Увеличить на единицу</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">DEC(B) r</td><td style="border-bottom:1px solid black">Уменьшить на единицу</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">NEG(B) r</td><td style="border-bottom:1px solid black">Изменить знак</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">ADC(B) r</td><td style="border-bottom:1px solid black">Увеличить на единицу, если C=1</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">SBC(B) r</td><td style="border-bottom:1px solid black">Уменьшить на единицу, если С=1</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">TST(B) r</td><td style="border-bottom:1px solid black">Сравнить с нулем</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">ROR(B) r</td><td style="border-bottom:1px solid black">Циклический сдвиг вправо через флаг C</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">ROL(B) r</td><td style="border-bottom:1px solid black">Циклический сдвиг влево через флаг C</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">ASR(B) r</td><td style="border-bottom:1px solid black">Cдвиг вправо, старший бит дублируется</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">ASL(B) r</td><td style="border-bottom:1px solid black">Cдвиг вправо, младший бит равен 0</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">SXT r</td><td style="border-bottom:1px solid black">Расширение знака. Если N=0 записывает 0, иначе -1</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">MTPS r</td><td style="border-bottom:1px solid black">Установка регистра флагов</td></tr>
+<tr><td>MFPS r</td><td>Чтение регистра флагов</td></tr>
+<tr><td>CALL r</td><td>Синоним JSR PC, </td></tr>
+</tbody></table><br><h3>Аргументы команды</h3><br><table>
+<tbody><tr><td style="white-space:nowrap;border-bottom:1px solid black">R0, R1, R2, R3, R4, R5, SP, PC</td><td style="border-bottom:1px solid black">Регистр. Все регистры 16 битные. 8 битные команды будут работать с младшими их половинами.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">(REG) или @REG</td><td style="border-bottom:1px solid black">Значение по адресу</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">@(REG)</td><td style="border-bottom:1px solid black">Значение по адресу по адресу.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">-(REG)</td><td style="border-bottom:1px solid black">Значение по адресу. Уменьшить регистр до выполнения команды на 1 для байта. И на 2 для слова.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">@-(REG)</td><td style="border-bottom:1px solid black">Значение по адресу по адресу. Уменьшить регистр до выполнения команды.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">(REG)+</td><td style="border-bottom:1px solid black">Значение по адресу. Увеличить регистр после выполнения команды на 1 для байта. И на 2 для слова.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">@(REG)+</td><td style="border-bottom:1px solid black">Значение по адресу по адресу. Увеличить регистр после выполнения команды.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">IMM(REG)</td><td style="border-bottom:1px solid black">Значение по адресу, который рассчитывается как сумма регистра и числа.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">@IMM(REG)</td><td style="border-bottom:1px solid black">Значение по адресу по адресу, который рассчитывается как сумма регистра и числа.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">#A</td><td style="border-bottom:1px solid black">Число или адрес переменной.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">@#A</td><td style="border-bottom:1px solid black">Значение по адресу или переменная. Абсолютная адресация.</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">A</td><td style="border-bottom:1px solid black">Значение по адресу или переменная. Адрес относительно PC.</td></tr>
+<tr><td>@A</td><td>Значение по адресу по адресу. Первый адрес относительно PC.</td></tr>
+</tbody></table><br><h3>Команды процессора с двумя аргументами</h3><br><table>
+<tbody><tr><td style="white-space:nowrap;border-bottom:1px solid black">MOV(B) a, b</td><td style="border-bottom:1px solid black">Скопировать</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">CMP(B) a, b</td><td style="border-bottom:1px solid black">Сравнить A и B</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BIS(B) a, b</td><td style="border-bottom:1px solid black">Логическое ИЛИ</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BIС(B) a, b</td><td style="border-bottom:1px solid black">Логическое И-НЕ (B = B &amp; ~A)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BIT(B) a, b</td><td style="border-bottom:1px solid black">Логическое И без сохранения результата</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">ADD a, b</td><td style="border-bottom:1px solid black">Сложение</td></tr>
+<tr><td>SUB a, b</td><td>Вычитание</td></tr>
+</tbody></table><br><h3>Команды условного перехода</h3><br><p>Могут 
+переходить только в пределах -256..+254 байта, относительно адреса 
+следующей команды. Числа указанные в аргументе команды интерпретируются 
+как числовые метки.</p><br><table>
+<tbody><tr><td style="white-space:nowrap;border-bottom:1px solid black">BR imm</td><td style="border-bottom:1px solid black">Всегда</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BNE imm</td><td style="border-bottom:1px solid black">Не равно (Z=0)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BEQ imm</td><td style="border-bottom:1px solid black">Равно (Z=1)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BGE imm</td><td style="border-bottom:1px solid black">Больше равно для знаковых типов (N^V=0)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BLT imm</td><td style="border-bottom:1px solid black">Меньше для знаковых типов (N^V=1)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BGT imm</td><td style="border-bottom:1px solid black">Больше для знаковых типов (Z|(N^V)=0)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BLE imm</td><td style="border-bottom:1px solid black">Меньше равно для знаковых типов (Z|(N^V)=1)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BPL imm</td><td style="border-bottom:1px solid black">Результат положительный (N=0)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BMI imm</td><td style="border-bottom:1px solid black">Результат отрицательный (N=1)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BHI imm</td><td style="border-bottom:1px solid black">Больше (C|Z=0)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BVC imm</td><td style="border-bottom:1px solid black">Нет знакового переполнения (V=0)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BVS imm</td><td style="border-bottom:1px solid black">Знаковое переполнение (V=1)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">BHIS imm / BCC imm</td><td style="border-bottom:1px solid black">Больше или равно / нет переполнения (C=0)</td></tr>
+<tr><td>BLO imm / BCS imm</td><td>Меньше / переполнение (C=1)</td></tr>
+</tbody></table><br><h2>Необычные команды процессора</h2><br><table>
+<tbody><tr><td style="white-space:nowrap;border-bottom:1px solid black">JSR reg, a</td><td style="border-bottom:1px solid black">Вызвать подпрограмму (REG - только регистр, A - любой аргумент)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">RTS reg</td><td style="border-bottom:1px solid black">Выход из подпрограммы (REG - только регистр)</td></tr>
+<tr><td style="white-space:nowrap;border-bottom:1px solid black">XOR reg, a</td><td style="border-bottom:1px solid black">Исключающее ИЛИ (REG - только регистр, A - любой аргумент)</td></tr>
+<tr><td>SOB reg, imm</td><td>Цикл (REG - только регистр, IMM - адрес). Числа указанные в аргументе IMM команды интерпретируются как числовые метки.</td></tr>
+</tbody></table><div class="ljtags">Tags: <a target="_self" rel="tag" href="http://vinxru.livejournal.com/tag/%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5">программирование</a>, <a target="_self" rel="tag" href="http://vinxru.livejournal.com/tag/%D1%80%D0%B5%D1%82%D1%80%D0%BE">ретро</a></div></div>
+                    </dd>
+
+                </dl>
+                </div>
+
+</body>
+</html>
