@@ -265,6 +265,10 @@ bool Compiler::compileLine2() {
       for(;p.tokenNum>0; p.tokenNum--) out.write16(0);
       return true;
     }
+    if(p.ifToken("even")) { /* added as per patch from Ivanq */
+      out.writePtr = (out.writePtr + 1) / 2 * 2;
+      return true;
+    }
     p.cfg.altstringb = '/';
     p.cfg.altstringe = '/';
     if(p.ifToken("ascii")) {
@@ -273,6 +277,15 @@ bool Compiler::compileLine2() {
       p.needToken(ttString2);
       if(convert1251toKOI8R) cp1251_to_koi8r(p.loadedText);
       out.write(p.loadedText, strlen(p.loadedText));
+      return true;
+    }
+    if(p.ifToken("asciz")) { /* addad as per patch from Ivanq */
+      p.cfg.altstringb = 0;
+      p.cfg.altstringe = 0;
+      p.needToken(ttString2);
+      if(convert1251toKOI8R) cp1251_to_koi8r(p.loadedText);
+      out.write(p.loadedText, strlen(p.loadedText));
+      out.write("\0", 1);
       return true;
     }
     p.cfg.altstringb = 0;
